@@ -2,12 +2,18 @@ const std = @import("std");
 const set = @import("root.zig");
 
 pub fn main(init: std.process.Init) !void {
-    
     const gpa = init.gpa;
 
     const repetitions: usize = 1000;
-    const times = try gpa.alloc(i64, repetitions);
-    defer gpa.free(times);
+    
+    const times_diff = try gpa.alloc(i64, repetitions);
+    defer gpa.free(times_diff);
+    
+    const times_sym = try gpa.alloc(i64, repetitions);
+    defer gpa.free(times_sym);
+    
+    const times_inter = try gpa.alloc(i64, repetitions);
+    defer gpa.free(times_inter);
 
     const upper: u32 = 100000; 
     var B = set.Set(u32).init();
@@ -18,27 +24,48 @@ pub fn main(init: std.process.Init) !void {
         _ = try B.add(gpa, e);
     }
     
-    std.debug.print("starting benchkmark\n", .{});
+    std.debug.print("starting benchmark\n", .{});
+    
     for (0..repetitions) |i| {
+        var A_diff = set.Set(u32).init();
+        defer A_diff.deinit(gpa);
         
-        var A = set.Set(u32).init();
-        defer A.deinit(gpa);
+        var A_sym = set.Set(u32).init();
+        defer A_sym.deinit(gpa);
+        
+        var A_inter = set.Set(u32).init();
+        defer A_inter.deinit(gpa);
 
         for (0..upper) |j| {
             const e: u32 = @intCast(j);
-            _ = try A.add(gpa, @as(u32, e));
+            _ = try A_diff.add(gpa, e);
+            _ = try A_sym.add(gpa, e);
+            _ = try A_inter.add(gpa, e);
         }
     
-        const startTime = std.Io.Timestamp.now(init.io, .awake);
-        _ = try A.differenceUpdate(B);
-        const elapsedTime = startTime.untilNow(init.io, .awake);
+        const start_diff = std.Io.Timestamp.now(init.io, .awake);
+        _ = try A_diff.differenceUpdate(B);
+        const elapsed_diff = start_diff.untilNow(init.io, .awake);
+        times_diff[i] = elapsed_diff.toMilliseconds();
 
-        times[i] = elapsedTime.toMilliseconds();
+        const start_sym = std.Io.Timestamp.now(init.io, .awake);
+        _ = try A_sym.symmetricDifferenceUpdate(gpa, B);
+        const elapsed_sym = start_sym.untilNow(init.io, .awake);
+        times_sym[i] = elapsed_sym.toMilliseconds();
+
+        const start_inter = std.Io.Timestamp.now(init.io, .awake);
+        _ = try A_inter.intersectionUpdate(gpa, B);
+        const elapsed_inter = start_inter.untilNow(init.io, .awake);
+        times_inter[i] = elapsed_inter.toMilliseconds();
     }
 
-    const stats: Stats = Stats.calculateFromData(times);
+    const stats_diff = Stats.calculateFromData(times_diff);
+    const stats_sym = Stats.calculateFromData(times_sym);
+    const stats_inter = Stats.calculateFromData(times_inter);
 
-    std.debug.print("{s: <24}: {d:.4} +/- {d:.6} (95% CI)\n", .{ "Avg Time (ms)", stats.mean, stats.ci });
+    std.debug.print("{s: <24}: {d:.4} +/- {d:.6} (95% CI)\n", .{ "Difference (ms)", stats_diff.mean, stats_diff.ci });
+    std.debug.print("{s: <24}: {d:.4} +/- {d:.6} (95% CI)\n", .{ "Sym Difference (ms)", stats_sym.mean, stats_sym.ci });
+    std.debug.print("{s: <24}: {d:.4} +/- {d:.6} (95% CI)\n", .{ "Intersection (ms)", stats_inter.mean, stats_inter.ci });
 }
 
 pub const Stats = struct {
@@ -64,4 +91,3 @@ pub const Stats = struct {
         return Stats{ .mean = mean, .ci = margin_error };
     }
 };
-

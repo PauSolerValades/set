@@ -329,17 +329,15 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
 
             var iter = self.iterator();
             while (iter.next()) |key_ptr| {
-                // Dereference key_ptr when checking!
                 if (!other.contains(key_ptr.*)) {
-                    // Dereference key_ptr when appending!
                     try to_remove.append(allocator, key_ptr.*);
                 }
             }
 
             for (to_remove.items) |item| {
-                // 'item' is already type E, so no .* is needed here!
                 _ = self.remove(item);
-            }        }
+            }        
+        }
 
         /// isDisjoint returns true if the intersection between two sets is the null set.
         /// Otherwise returns false.
@@ -475,7 +473,7 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         pub fn symmetricDifferenceUpdate(self: *Self, allocator: Allocator, other: Self) Allocator.Error!void {
             var iter = other.iterator();
             while (iter.next()) |key_ptr| {
-                const element = key_ptr.*; // Extract it once up front
+                const element = key_ptr.*;
 
                 if (self.contains(element)) {
                     _ = self.remove(element);
