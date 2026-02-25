@@ -27,11 +27,11 @@ pub const Set = HashSet;
 /// This Hash-based is optmized for lookups.
 pub const HashSet = @import("hash_set.zig").HashSet;
 
-// /// ArraySetUnmanaged is a conveniently exported "unmanaged" version of an array-based Set.
-// /// This is a bit more specialized and optimized for heavy iteration.
-// pub const ArraySet = @import("array_hash_set.zig").ArraySetUnmanaged;
+/// ArraySetUnmanaged is a conveniently exported "unmanaged" version of an array-based Set.
+/// This is a bit more specialized and optimized for heavy iteration.
+pub const ArraySet = @import("array_hash_set.zig").ArraySet;
 
 test "tests" {
     _ = @import("hash_set.zig");
- //   _ = @import("array_hash_set.zig");
+    _ = @import("array_hash_set.zig");
 }
