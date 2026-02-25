@@ -242,22 +242,12 @@ pub fn HashSetUnmanagedWithContext(comptime E: type, comptime Context: type, com
         /// differenceUpdate does an in-place mutation of this set
         /// and other. This set will contain all elements of this set that are not
         /// also elements of other.
-        pub fn differenceUpdate(self: *Self, allocator: Allocator, other: Self) Allocator.Error!void {
-            // In-place mutation invalidates iterators therefore a temp set is needed.
-            // So instead of a temp set, just invoke the regular full function which
-            // allocates and returns a set then swap out the map internally.
-
-            // Also, this saves a step of not having to possibly discard many elements
-            // from the self set.
-
-            // Just get a new set with the normal method.
-            const diffSet = try self.differenceOf(allocator, other);
-
-            // Destroy the internal map.
-            self.unmanaged.deinit(allocator);
-
-            // Swap it out with the new set.
-            self.unmanaged = diffSet.unmanaged;
+        pub fn differenceUpdate(self: *Self, other: Self) Allocator.Error!void {
+            var iter = other.iterator(); 
+            
+            while (iter.next()) |key_ptr| { 
+                _ = self.remove(key_ptr.*); 
+            }
         }
 
         fn dump(self: Self) void {
@@ -334,21 +324,19 @@ pub fn HashSetUnmanagedWithContext(comptime E: type, comptime Context: type, com
         /// to the current set from the other set keeping only
         /// elements found in this Set and the other Set.
         pub fn intersectionUpdate(self: *Self, allocator: Allocator, other: Self) Allocator.Error!void {
-            // In-place mutation invalidates iterators therefore a temp set is needed.
-            // So instead of a temp set, just invoke the regular full function which
-            // allocates and returns a set then swap out the map internally.
+            var to_remove: std.ArrayList(E) = .empty;
+            defer to_remove.deinit(allocator);
 
-            // Also, this saves a step of not having to possibly discard many elements
-            // from the self set.
+            var iter = self.iterator();
+            while (iter.next()) |key_ptr| {
+                if (!other.contains(key_ptr.*)) {
+                    try to_remove.append(allocator, key_ptr.*);
+                }
+            }
 
-            // Just get a new set with the normal method.
-            const interSet = try self.intersectionOf(allocator, other);
-
-            // Destroy the internal map.
-            self.unmanaged.deinit(allocator);
-
-            // Swap it out with the new set.
-            self.unmanaged = interSet.unmanaged;
+            for (to_remove.items) |item| {
+                _ = self.remove(item);
+            }    
         }
 
         /// isDisjoint returns true if the intersection between two sets is the null set.
@@ -483,21 +471,16 @@ pub fn HashSetUnmanagedWithContext(comptime E: type, comptime Context: type, com
         /// symmetricDifferenceUpdate does an in-place mutation with all elements
         /// which are in either this set or the other set but not in both.
         pub fn symmetricDifferenceUpdate(self: *Self, allocator: Allocator, other: Self) Allocator.Error!void {
-            // In-place mutation invalidates iterators therefore a temp set is needed.
-            // So instead of a temp set, just invoke the regular full function which
-            // allocates and returns a set then swap out the map internally.
+            var iter = other.iterator();
+            while (iter.next()) |key_ptr| {
+                const element = key_ptr.*;
 
-            // Also, this saves a step of not having to possibly discard many elements
-            // from the self set.
-
-            // Just get a new set with the normal method.
-            const sd = try self.symmetricDifferenceOf(allocator, other);
-
-            // Destroy the internal map.
-            self.unmanaged.deinit(allocator);
-
-            // Swap it out with the new set.
-            self.unmanaged = sd.unmanaged;
+                if (self.contains(element)) {
+                    _ = self.remove(element);
+                } else {
+                    _ = try self.add(allocator, element);
+                }
+            }
         }
 
         /// union returns a new set with all elements in both sets.
@@ -812,7 +795,7 @@ test "in-place methods" {
     defer f.deinit(testing.allocator);
     _ = try f.appendSlice(testing.allocator, &.{ 1, 11, 111, 222, 2222, 1111 });
 
-    try e.differenceUpdate(testing.allocator, f);
+    try e.differenceUpdate(f);
 
     try expectEqual(1, e.cardinality());
     try expect(e.contains(11111));

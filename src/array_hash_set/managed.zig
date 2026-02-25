@@ -816,6 +816,7 @@ test "benchmark" {
     const allocator = std.testing.allocator;
     const Iterations = 10_000;
     const SetSize = 1000;
+    const io = std.testing.io;
 
     // Setup
     var base = try ArraySetManaged(u32).initCapacity(allocator, SetSize);
@@ -827,37 +828,40 @@ test "benchmark" {
     for (0..SetSize) |i| _ = other.addAssumeCapacity(@intCast(i + SetSize / 2));
 
     // Benchmark unionOf
-    var union_timer = try std.time.Timer.start();
+    const union_start = std.Io.Timestamp.now(io, .awake);
     for (0..Iterations) |_| {
         var result = try base.unionOf(other);
         defer result.deinit();
     }
-    const union_elapsed = union_timer.read();
+    const union_elapsed = union_start.untilNow(io, .awake);
+    
     std.debug.print("\nunionOf: {d} ops/sec ({d:.2} ns/op)\n", .{
-        Iterations * std.time.ns_per_s / union_elapsed,
-        @as(f64, @floatFromInt(union_elapsed)) / @as(f64, @floatFromInt(Iterations)),
+        @as(f64, @floatFromInt(Iterations * std.time.ns_per_s)) / @as(f64, @floatFromInt(union_elapsed.toNanoseconds())),
+        @as(f64, @floatFromInt(union_elapsed.toNanoseconds())) / @as(f64, @floatFromInt(Iterations)),
     });
 
-    // Benchmark intersectionOf
-    var inter_timer = try std.time.Timer.start();
+    const inter_start = std.Io.Timestamp.now(io, .awake);
     for (0..Iterations) |_| {
         var result = try base.intersectionOf(other);
         defer result.deinit();
     }
-    const inter_elapsed = inter_timer.read();
-    std.debug.print("intersectionOf: {d} ops/sec ({d:.2} ns/op)\n", .{
-        Iterations * std.time.ns_per_s / inter_elapsed,
-        @as(f64, @floatFromInt(inter_elapsed)) / @as(f64, @floatFromInt(Iterations)),
+    const inter_elapsed = inter_start.untilNow(io, .awake);
+    
+    std.debug.print("\nintersectionOf: {d} ops/sec ({d:.2} ns/op)\n", .{
+        @as(f64, @floatFromInt(Iterations * std.time.ns_per_s)) / @as(f64, @floatFromInt(inter_elapsed.toNanoseconds())),
+        @as(f64, @floatFromInt(inter_elapsed.toNanoseconds())) / @as(f64, @floatFromInt(Iterations)),
     });
 
-    // Benchmark containsAll
-    var contains_timer = try std.time.Timer.start();
+        // Benchmark containsAll
+    const contains_start = std.Io.Timestamp.now(io, .awake);
     for (0..Iterations) |_| {
         _ = base.containsAll(other);
     }
-    const contains_elapsed = contains_timer.read();
-    std.debug.print("containsAll: {d} ops/sec ({d:.2} ns/op)\n", .{
-        Iterations * std.time.ns_per_s / contains_elapsed,
-        @as(f64, @floatFromInt(contains_elapsed)) / @as(f64, @floatFromInt(Iterations)),
+    const contains_elapsed = contains_start.untilNow(io, .awake);
+
+    std.debug.print("\ncontainsAll: {d} ops/sec ({d:.2} ns/op)\n", .{
+        @as(f64, @floatFromInt(Iterations * std.time.ns_per_s)) / @as(f64, @floatFromInt(contains_elapsed.toNanoseconds())),
+        @as(f64, @floatFromInt(contains_elapsed.toNanoseconds())) / @as(f64, @floatFromInt(Iterations)),
     });
+    
 }
