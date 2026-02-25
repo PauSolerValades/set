@@ -23,13 +23,13 @@
 /// which to pick, just use Set.
 pub const Set = HashSet;
 
-/// HashSetUnmanaged is a conveniently exported "unmanaged" version of a hash-based Set.
 /// This Hash-based is optmized for lookups.
 pub const HashSet = @import("hash_set.zig").HashSet;
+pub const HashSetContext = @import("hash_set.zig").HashSetWithContext;
 
-/// ArraySetUnmanaged is a conveniently exported "unmanaged" version of an array-based Set.
 /// This is a bit more specialized and optimized for heavy iteration.
 pub const ArraySet = @import("array_hash_set.zig").ArraySet;
+
 
 test "tests" {
     _ = @import("hash_set.zig");

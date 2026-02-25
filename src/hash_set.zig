@@ -72,15 +72,21 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         pub const Iterator = Map.KeyIterator;
 
         const Self = @This();
+    
+        pub const empty: Self = if (@sizeOf(Context) == 0) .{
+            .unmanaged = Map{},
+            .context = if (Context == void) {} else undefined,
+            .max_load_percentage = if (Context == void) {} else max_load_percentage,
+        } else @compileError("Cannot init as empty if context was non void");
 
-        /// Initialize a default set without context
-        pub fn init() Self {
-            return .{
-                .unmanaged = Map{},
-                .context = if (Context == void) {} else undefined,
-                .max_load_percentage = if (Context == void) {} else max_load_percentage,
-            };
-        }
+        // /// Initialize a default set without context
+        // pub fn init() Self {
+        //     return .{
+        //         .unmanaged = Map{},
+        //         .context = if (Context == void) {} else undefined,
+        //         .max_load_percentage = if (Context == void) {} else max_load_percentage,
+        //     };
+        // }
 
         /// Initialize with a custom context
         pub fn initContext(context: Context) Self {
@@ -99,6 +105,8 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         }
 
         /// Destroys the unmanaged Set.
+        /// TODO: zig has still not changed the HashMap in 0.16, so we need to pass 
+        /// the allocator here. It needs to be removed.
         pub fn deinit(self: *Self, allocator: Allocator) void {
             self.unmanaged.deinit(allocator);
             self.* = undefined;

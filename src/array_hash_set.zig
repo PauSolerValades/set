@@ -69,12 +69,16 @@ pub fn ArraySet(comptime E: type) type {
         };
 
         const Self = @This();
-
-        pub fn init() Self {
-            return .{
-                .unmanaged = Map{},
-            };
-        }
+    
+        pub const empty: Self = .{
+            .unmanaged = Map{},
+        };
+        
+        // pub fn init() Self {
+        //     return .{
+        //         .unmanaged = Map{},
+        //     };
+        // }
 
         pub fn initCapacity(allocator: Allocator, num: Size) Allocator.Error!Self {
             var self = Self.init();
@@ -82,6 +86,8 @@ pub fn ArraySet(comptime E: type) type {
             return self;
         }
 
+        /// TODO: zig has still not changed neither of the two maps from selectMap 0.16, 
+        /// so we need to pass the allocator to deinit that.
         pub fn deinit(self: *Self, allocator: Allocator) void {
             self.unmanaged.deinit(allocator);
             self.* = undefined;
@@ -496,7 +502,7 @@ const expectEqual = std.testing.expectEqual;
 
 test "example usage" {
     // Create a set of u32s called A
-    var A = ArraySet(u32).init();
+    var A = ArraySet(u32) = .empty;
     defer A.deinit(testing.allocator);
 
     // Add some data
@@ -508,7 +514,7 @@ test "example usage" {
     _ = try A.appendSlice(testing.allocator, &.{ 5, 3, 0, 9 });
 
     // Create another set called B
-    var B = ArraySet(u32).init();
+    var B = ArraySet(u32) = .empty;
     defer B.deinit(testing.allocator);
 
     // Add data to B
@@ -549,7 +555,7 @@ test "string usage" {
 }
 
 test "comprehensive usage" {
-    var set = ArraySet(u32).init();
+    var set = ArraySet(u32) = .empty;
     defer set.deinit(testing.allocator);
 
     try expect(set.isEmpty());
@@ -573,7 +579,7 @@ test "comprehensive usage" {
 
     try expectEqual(set.cardinality(), 7);
 
-    var other = ArraySet(u32).init();
+    var other = ArraySet(u32) = .empty;
     defer other.deinit(testing.allocator);
 
     try expect(other.isEmpty());
@@ -632,11 +638,11 @@ test "comprehensive usage" {
 }
 
 test "isDisjoint" {
-    var a = ArraySet(u32).init();
+    var a = ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
-    var b = ArraySet(u32).init();
+    var b = ArraySet(u32) = .empty;
     defer b.deinit(testing.allocator);
     _ = try b.appendSlice(testing.allocator, &.{ 202, 303, 403 });
 
@@ -645,7 +651,7 @@ test "isDisjoint" {
     try expect(b.isDisjoint(a));
 
     // Test the false case.
-    var c = ArraySet(u32).init();
+    var c = ArraySet(u32) = .empty;
     defer c.deinit(testing.allocator);
     _ = try c.appendSlice(testing.allocator, &.{ 20, 30, 400 });
 
@@ -656,7 +662,7 @@ test "isDisjoint" {
 test "clone" {
 
     // clone
-    var a = ArraySet(u32).init();
+    var a = ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -667,7 +673,7 @@ test "clone" {
 }
 
 test "clear/capacity" {
-    var a = ArraySet(u32).init();
+    var a = ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
 
     try expectEqual(0, a.cardinality());
@@ -699,7 +705,7 @@ test "clear/capacity" {
 }
 
 test "iterator" {
-    var a = ArraySet(u32).init();
+    var a = ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -716,7 +722,7 @@ test "iterator" {
 }
 
 test "pop" {
-    var a = ArraySet(u32).init();
+    var a = ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -735,11 +741,11 @@ test "pop" {
 
 test "in-place methods" {
     // intersectionUpdate
-    var a = ArraySet(u32).init();
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 10, 20, 30, 40 });
 
-    var b = ArraySet(u32).init();
+    var b: ArraySet(u32) = .empty;
     defer b.deinit(testing.allocator);
     _ = try b.appendSlice(testing.allocator, &.{ 44, 20, 30, 66 });
 
@@ -748,11 +754,11 @@ test "in-place methods" {
     try expect(a.containsAllSlice(&.{ 20, 30 }));
 
     // unionUpdate
-    var c = ArraySet(u32).init();
+    var c: ArraySet(u32) = .empty;
     defer c.deinit(testing.allocator);
     _ = try c.appendSlice(testing.allocator, &.{ 10, 20, 30, 40 });
 
-    var d = ArraySet(u32).init();
+    var d: ArraySet(u32) = .empty;
     defer d.deinit(testing.allocator);
     _ = try d.appendSlice(testing.allocator, &.{ 44, 20, 30, 66 });
 
@@ -761,11 +767,11 @@ test "in-place methods" {
     try expect(c.containsAllSlice(&.{ 10, 20, 30, 40, 66 }));
 
     // differenceUpdate
-    var e = ArraySet(u32).init();
+    var e: ArraySet(u32) = .empty;
     defer e.deinit(testing.allocator);
     _ = try e.appendSlice(testing.allocator, &.{ 1, 11, 111, 1111, 11111 });
 
-    var f = ArraySet(u32).init();
+    var f: ArraySet(u32) = .empty;
     defer f.deinit(testing.allocator);
     _ = try f.appendSlice(testing.allocator, &.{ 1, 11, 111, 222, 2222, 1111 });
 
@@ -775,11 +781,11 @@ test "in-place methods" {
     try expect(e.contains(11111));
 
     // symmetricDifferenceUpdate
-    var g = ArraySet(u32).init();
+    var g: ArraySet(u32) = .empty;
     defer g.deinit(testing.allocator);
     _ = try g.appendSlice(testing.allocator, &.{ 2, 22, 222, 2222, 22222 });
 
-    var h = ArraySet(u32).init();
+    var h = ArraySet(u32) = .empty;
     defer h.deinit(testing.allocator);
     _ = try h.appendSlice(testing.allocator, &.{ 1, 11, 111, 333, 3333, 2222, 1111 });
 
@@ -790,7 +796,7 @@ test "in-place methods" {
 }
 
 test "removals" {
-    var a = ArraySet(u32).init();
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
 
     _ = try a.appendSlice(testing.allocator, &.{ 5, 6, 7, 8 });
@@ -809,7 +815,7 @@ test "removals" {
     a.removeAllSlice(&.{ 50, 60, 70, 80 });
     try expectEqual(4, a.cardinality());
 
-    var b = ArraySet(u32).init();
+    var b: ArraySet(u32) = .empty;
     defer b.deinit(testing.allocator);
 
     _ = try b.appendSlice(testing.allocator, &.{ 111, 222, 333, 444 });
