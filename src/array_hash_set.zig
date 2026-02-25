@@ -81,7 +81,7 @@ pub fn ArraySet(comptime E: type) type {
         // }
 
         pub fn initCapacity(allocator: Allocator, num: Size) Allocator.Error!Self {
-            var self = Self.init();
+            var self: Self = .empty;
             try self.unmanaged.ensureTotalCapacity(allocator, num);
             return self;
         }
@@ -191,7 +191,7 @@ pub fn ArraySet(comptime E: type) type {
         ///
         /// Caller owns the newly allocated/returned set.
         pub fn differenceOf(self: Self, allocator: Allocator, other: Self) Allocator.Error!Self {
-            var diffSet = Self.init();
+            var diffSet: Self = .empty;
 
             var iter = self.unmanaged.iterator();
             while (iter.next()) |entry| {
@@ -262,7 +262,7 @@ pub fn ArraySet(comptime E: type) type {
         ///
         /// Caller owns the newly allocated/returned set.
         pub fn intersectionOf(self: Self, allocator: Allocator, other: Self) Allocator.Error!Self {
-            var interSet = Self.init();
+            var interSet: Self = .empty;
 
             // Optimization: iterate over whichever set is smaller.
             // Matters when disparity in cardinality is large.
@@ -419,7 +419,7 @@ pub fn ArraySet(comptime E: type) type {
         ///
         /// The caller owns the newly allocated/returned Set.
         pub fn symmetricDifferenceOf(self: Self, allocator: Allocator, other: Self) Allocator.Error!Self {
-            var sdSet = Self.init();
+            var sdSet: Self = .empty;
 
             var iter = self.unmanaged.iterator();
             while (iter.next()) |entry| {
@@ -502,7 +502,7 @@ const expectEqual = std.testing.expectEqual;
 
 test "example usage" {
     // Create a set of u32s called A
-    var A = ArraySet(u32) = .empty;
+    var A: ArraySet(u32) = .empty;
     defer A.deinit(testing.allocator);
 
     // Add some data
@@ -514,7 +514,7 @@ test "example usage" {
     _ = try A.appendSlice(testing.allocator, &.{ 5, 3, 0, 9 });
 
     // Create another set called B
-    var B = ArraySet(u32) = .empty;
+    var B: ArraySet(u32) = .empty;
     defer B.deinit(testing.allocator);
 
     // Add data to B
@@ -539,10 +539,10 @@ test "example usage" {
 }
 
 test "string usage" {
-    var A = ArraySet([]const u8).init();
+    var A: ArraySet([]const u8) = .empty;
     defer A.deinit(testing.allocator);
 
-    var B = ArraySet([]const u8).init();
+    var B: ArraySet([]const u8) = .empty;
     defer B.deinit(testing.allocator);
 
     _ = try A.add(testing.allocator, "Hello");
@@ -555,7 +555,7 @@ test "string usage" {
 }
 
 test "comprehensive usage" {
-    var set = ArraySet(u32) = .empty;
+    var set: ArraySet(u32) = .empty;
     defer set.deinit(testing.allocator);
 
     try expect(set.isEmpty());
@@ -579,7 +579,7 @@ test "comprehensive usage" {
 
     try expectEqual(set.cardinality(), 7);
 
-    var other = ArraySet(u32) = .empty;
+    var other: ArraySet(u32) = .empty;
     defer other.deinit(testing.allocator);
 
     try expect(other.isEmpty());
@@ -638,11 +638,11 @@ test "comprehensive usage" {
 }
 
 test "isDisjoint" {
-    var a = ArraySet(u32) = .empty;
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
-    var b = ArraySet(u32) = .empty;
+    var b: ArraySet(u32) = .empty;
     defer b.deinit(testing.allocator);
     _ = try b.appendSlice(testing.allocator, &.{ 202, 303, 403 });
 
@@ -651,7 +651,7 @@ test "isDisjoint" {
     try expect(b.isDisjoint(a));
 
     // Test the false case.
-    var c = ArraySet(u32) = .empty;
+    var c: ArraySet(u32) = .empty;
     defer c.deinit(testing.allocator);
     _ = try c.appendSlice(testing.allocator, &.{ 20, 30, 400 });
 
@@ -662,7 +662,7 @@ test "isDisjoint" {
 test "clone" {
 
     // clone
-    var a = ArraySet(u32) = .empty;
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -673,7 +673,7 @@ test "clone" {
 }
 
 test "clear/capacity" {
-    var a = ArraySet(u32) = .empty;
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
 
     try expectEqual(0, a.cardinality());
@@ -705,7 +705,7 @@ test "clear/capacity" {
 }
 
 test "iterator" {
-    var a = ArraySet(u32) = .empty;
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -722,7 +722,7 @@ test "iterator" {
 }
 
 test "pop" {
-    var a = ArraySet(u32) = .empty;
+    var a: ArraySet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -785,7 +785,7 @@ test "in-place methods" {
     defer g.deinit(testing.allocator);
     _ = try g.appendSlice(testing.allocator, &.{ 2, 22, 222, 2222, 22222 });
 
-    var h = ArraySet(u32) = .empty;
+    var h: ArraySet(u32) = .empty;
     defer h.deinit(testing.allocator);
     _ = try h.appendSlice(testing.allocator, &.{ 1, 11, 111, 333, 3333, 2222, 1111 });
 

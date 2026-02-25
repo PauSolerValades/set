@@ -99,7 +99,7 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
 
         /// Initialzies a Set using a capacity hint, with the given Allocator
         pub fn initCapacity(allocator: Allocator, num: Size) Allocator.Error!Self {
-            var self = Self.init();
+            var self: Self = .empty;
             try self.unmanaged.ensureTotalCapacity(allocator, num);
             return self;
         }
@@ -236,7 +236,7 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         ///
         /// Caller owns the newly allocated/returned set.
         pub fn differenceOf(self: Self, allocator: Allocator, other: Self) Allocator.Error!Self {
-            var diffSet = Self.init();
+            var diffSet: Self = .empty;
 
             var iter = self.unmanaged.iterator();
             while (iter.next()) |entry| {
@@ -307,7 +307,7 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         ///
         /// Caller owns the newly allocated/returned set.
         pub fn intersectionOf(self: Self, allocator: Allocator, other: Self) Allocator.Error!Self {
-            var interSet = Self.init();
+            var interSet: Self = .empty;
 
             // Optimization: iterate over whichever set is smaller.
             // Matters when disparity in cardinality is large.
@@ -457,7 +457,7 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         ///
         /// The caller owns the newly allocated/returned Set.
         pub fn symmetricDifferenceOf(self: Self, allocator: Allocator, other: Self) Allocator.Error!Self {
-            var sdSet = Self.init();
+            var sdSet: Self = .empty;
 
             var iter = self.unmanaged.iterator();
             while (iter.next()) |entry| {
@@ -535,7 +535,7 @@ const expectEqual = std.testing.expectEqual;
 
 test "example usage" {
     // Create a set of u32s called A
-    var A = HashSet(u32).init();
+    var A: HashSet(u32) = .empty;
     defer A.deinit(testing.allocator);
 
     // Add some data
@@ -547,7 +547,7 @@ test "example usage" {
     _ = try A.appendSlice(testing.allocator, &.{ 5, 3, 0, 9 });
 
     // Create another set called B
-    var B = HashSet(u32).init();
+    var B: HashSet(u32) = .empty;
     defer B.deinit(testing.allocator);
 
     // Add data to B
@@ -567,10 +567,10 @@ test "example usage" {
 }
 
 test "string usage" {
-    var A = HashSet([]const u8).init();
+    var A: HashSet([]const u8) = .empty;
     defer A.deinit(testing.allocator);
 
-    var B = HashSet([]const u8).init();
+    var B: HashSet([]const u8) = .empty;
     defer B.deinit(testing.allocator);
 
     _ = try A.add(testing.allocator, "Hello");
@@ -583,7 +583,7 @@ test "string usage" {
 }
 
 test "comprehensive usage" {
-    var set = HashSet(u32).init();
+    var set: HashSet(u32) = .empty;
     defer set.deinit(testing.allocator);
 
     try expect(set.isEmpty());
@@ -607,7 +607,7 @@ test "comprehensive usage" {
 
     try expectEqual(set.cardinality(), 7);
 
-    var other = HashSet(u32).init();
+    var other: HashSet(u32) = .empty;
     defer other.deinit(testing.allocator);
 
     try expect(other.isEmpty());
@@ -666,11 +666,11 @@ test "comprehensive usage" {
 }
 
 test "isDisjoint" {
-    var a = HashSet(u32).init();
+    var a: HashSet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
-    var b = HashSet(u32).init();
+    var b: HashSet(u32) = .empty;
     defer b.deinit(testing.allocator);
     _ = try b.appendSlice(testing.allocator, &.{ 202, 303, 403 });
 
@@ -679,7 +679,7 @@ test "isDisjoint" {
     try expect(b.isDisjoint(a));
 
     // Test the false case.
-    var c = HashSet(u32).init();
+    var c: HashSet(u32) = .empty;
     defer c.deinit(testing.allocator);
     _ = try c.appendSlice(testing.allocator, &.{ 20, 30, 400 });
 
@@ -690,7 +690,7 @@ test "isDisjoint" {
 test "clone" {
 
     // clone
-    var a = HashSet(u32).init();
+    var a: HashSet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -701,7 +701,7 @@ test "clone" {
 }
 
 test "clear/capacity" {
-    var a = HashSet(u32).init();
+    var a: HashSet(u32) = .empty;
     defer a.deinit(testing.allocator);
 
     try expectEqual(0, a.cardinality());
@@ -733,7 +733,7 @@ test "clear/capacity" {
 }
 
 test "iterator" {
-    var a = HashSet(u32).init();
+    var a: HashSet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -750,7 +750,7 @@ test "iterator" {
 }
 
 test "pop" {
-    var a = HashSet(u32).init();
+    var a: HashSet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 20, 30, 40 });
 
@@ -769,11 +769,11 @@ test "pop" {
 
 test "in-place methods" {
     // intersectionUpdate
-    var a = HashSet(u32).init();
+    var a: HashSet(u32) = .empty;
     defer a.deinit(testing.allocator);
     _ = try a.appendSlice(testing.allocator, &.{ 10, 20, 30, 40 });
 
-    var b = HashSet(u32).init();
+    var b: HashSet(u32) = .empty;
     defer b.deinit(testing.allocator);
     _ = try b.appendSlice(testing.allocator, &.{ 44, 20, 30, 66 });
 
@@ -782,11 +782,11 @@ test "in-place methods" {
     try expect(a.containsAllSlice(&.{ 20, 30 }));
 
     // unionUpdate
-    var c = HashSet(u32).init();
+    var c: HashSet(u32) = .empty;
     defer c.deinit(testing.allocator);
     _ = try c.appendSlice(testing.allocator, &.{ 10, 20, 30, 40 });
 
-    var d = HashSet(u32).init();
+    var d: HashSet(u32) = .empty;
     defer d.deinit(testing.allocator);
     _ = try d.appendSlice(testing.allocator, &.{ 44, 20, 30, 66 });
 
@@ -795,11 +795,11 @@ test "in-place methods" {
     try expect(c.containsAllSlice(&.{ 10, 20, 30, 40, 66 }));
 
     // differenceUpdate
-    var e = HashSet(u32).init();
+    var e: HashSet(u32) = .empty;
     defer e.deinit(testing.allocator);
     _ = try e.appendSlice(testing.allocator, &.{ 1, 11, 111, 1111, 11111 });
 
-    var f = HashSet(u32).init();
+    var f: HashSet(u32) = .empty;
     defer f.deinit(testing.allocator);
     _ = try f.appendSlice(testing.allocator, &.{ 1, 11, 111, 222, 2222, 1111 });
 
@@ -809,11 +809,11 @@ test "in-place methods" {
     try expect(e.contains(11111));
 
     // symmetricDifferenceUpdate
-    var g = HashSet(u32).init();
+    var g: HashSet(u32) = .empty;
     defer g.deinit(testing.allocator);
     _ = try g.appendSlice(testing.allocator, &.{ 2, 22, 222, 2222, 22222 });
 
-    var h = HashSet(u32).init();
+    var h: HashSet(u32) = .empty;
     defer h.deinit(testing.allocator);
     _ = try h.appendSlice(testing.allocator, &.{ 1, 11, 111, 333, 3333, 2222, 1111 });
 
