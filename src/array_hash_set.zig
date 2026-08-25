@@ -98,6 +98,14 @@ pub fn ArraySet(comptime E: type) type {
             return !result.found_existing;
         }
 
+        /// Adds a single element to the set. Asserts that there is enough capacity.
+        /// A bool is returned indicating if the element was actually added
+        /// if not already known.
+        pub fn addAssumeCapacity(self: *Self, element: E) bool {
+            const result = self.unmanaged.getOrPutAssumeCapacity(element);
+            return !result.found_existing;
+        }
+
         /// Appends all elements from the provided slice, and may allocate.
         /// appendSlice returns an Allocator.Error or Size which represents how
         /// many elements added and not previously in the slice.
@@ -841,4 +849,16 @@ test "add boolean" {
 
     const five_again_inserted = try A.add(testing.allocator, 5);
     try expectEqual(five_again_inserted, false);
+}
+
+test "addAssumeCapacity" {
+    var A = try ArraySet(u32).initCapacity(testing.allocator, 2);
+    defer A.deinit(testing.allocator);
+
+    try expectEqual(true, A.addAssumeCapacity(5));
+    try expectEqual(true, A.addAssumeCapacity(6));
+    try expectEqual(false, A.addAssumeCapacity(5));
+    try expectEqual(2, A.cardinality());
+    try expect(A.contains(5));
+    try expect(A.contains(6));
 }
