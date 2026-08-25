@@ -121,9 +121,8 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         /// A bool is returned indicating if the element was actually added
         /// if not already known.
         pub fn addAssumeCapacity(self: *Self, element: E) bool {
-            const prevCount = self.unmanaged.count();
-            self.unmanaged.putAssumeCapacity(element, {});
-            return prevCount != self.unmanaged.count();
+            const result = self.unmanaged.getOrPutAssumeCapacity(element);
+            return !result.found_existing;
         }
 
         /// Appends all elements from the provided set, and may allocate.
@@ -1012,4 +1011,18 @@ test "add boolean" {
 
     const five_again_inserted = try A.add(testing.allocator, 5);
     try expectEqual(five_again_inserted, false);
+}
+
+test "addAssumeCapacity" {
+    var A: HashSet(u32) = try .initCapacity(testing.allocator, 3);
+    defer A.deinit(testing.allocator);
+
+    try expect(A.addAssumeCapacity(1));
+    try expect(A.addAssumeCapacity(2));
+    try expect(A.addAssumeCapacity(3));
+
+    try expect(!A.addAssumeCapacity(1));
+
+    try expectEqual(3, A.cardinality());
+    try expect(A.capacity() >= 3);
 }
