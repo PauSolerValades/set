@@ -94,9 +94,8 @@ pub fn ArraySet(comptime E: type) type {
         }
 
         pub fn add(self: *Self, allocator: Allocator, element: E) Allocator.Error!bool {
-            const prevCount = self.unmanaged.count();
-            try self.unmanaged.put(allocator, element, {});
-            return prevCount != self.unmanaged.count();
+            const result = try self.unmanaged.getOrPut(allocator, element);
+            return !result.found_existing;
         }
 
         /// Appends all elements from the provided slice, and may allocate.
@@ -829,4 +828,17 @@ test "sizeOf matches" {
     const expectedByteSize = 40;
     try expectEqual(expectedByteSize, @sizeOf(std.AutoArrayHashMapUnmanaged(u32, void)));
     try expectEqual(expectedByteSize, @sizeOf(ArraySet(u32)));
+}
+
+test "add boolean" {
+    var A: ArraySet(u32) = .empty;
+    defer A.deinit(testing.allocator);
+
+    const five_inserted = try A.add(testing.allocator, 5);
+    try expectEqual(five_inserted, true);
+    const six_inserted = try A.add(testing.allocator, 6);
+    try expectEqual(six_inserted, true);
+
+    const five_again_inserted = try A.add(testing.allocator, 5);
+    try expectEqual(five_again_inserted, false);
 }
