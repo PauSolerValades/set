@@ -113,9 +113,8 @@ pub fn HashSetWithContext(comptime E: type, comptime Context: type, comptime max
         }
 
         pub fn add(self: *Self, allocator: Allocator, element: E) Allocator.Error!bool {
-            const prevCount = self.unmanaged.count();
-            try self.unmanaged.put(allocator, element, {});
-            return prevCount != self.unmanaged.count();
+            const result = try self.unmanaged.getOrPut(allocator, element);
+            return !result.found_existing;
         }
 
         /// Adds a single element to the set. Asserts that there is enough capacity.
@@ -1000,4 +999,17 @@ test "custom hash function string usage" {
     _ = try A.add(testing.allocator, "Hello\r");
     _ = try A.add(testing.allocator, "Hello\t");
     try expectEqual(7, A.cardinality());
+}
+
+test "add boolean" {
+    var A: HashSet(u32) = .empty;
+    defer A.deinit(testing.allocator);
+
+    const five_inserted = try A.add(testing.allocator, 5);
+    try expectEqual(five_inserted, true);
+    const six_inserted = try A.add(testing.allocator, 6);
+    try expectEqual(six_inserted, true);
+
+    const five_again_inserted = try A.add(testing.allocator, 5);
+    try expectEqual(five_again_inserted, false);
 }
